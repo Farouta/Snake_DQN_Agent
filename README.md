@@ -9,13 +9,13 @@ This project is a reinforcement learning agent that learns to play Snake using D
 ## Training Results
 
 ### MLP Agent after 10,000 Games on a 5×5 Board
-![MLP Score Graph](assets/score_graph_mlpp.png)
+![MLP Score Graph](assets/training_mlp_score.png)
 
-### CNN Agent after 10,000 Games on a 5×5 Board
-![CNN Score Graph](assets/score_graph_cnn.png)
+### CNN With 2 Conv Layers after 10,000 Games on a 5×5 Board
+![CNN Score Graph](assets/training_cnn_2layer_dashboard.png)
 
-### CNN Training Dashboard
-![CNN Training Dashboard](assets/graphs_cnn_no_gradient.png)
+### CNN With 7 Conv Layers after 10,000 Games on a 5×5 Board
+![CNN Training Dashboard](assets/training_cnn_7layer_dashboard.png)
 
 The dashboard tracks average score, loss, death reason ratio (wall vs body collision), and average game length across training batches of 500 games.
 

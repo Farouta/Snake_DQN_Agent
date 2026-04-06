@@ -96,7 +96,7 @@ class AgentMLP():
             self.epsilon=max(self.epsilon_min,self.epsilon*self.epsilon_decay)
             
 class AgentCNN():
-    def __init__(self, in_channels, width, height, hidden_size, output_size=3):
+    def __init__(self, in_channels, hidden_size, output_size=3):
 
 
         self.gamma=0.99
@@ -107,10 +107,10 @@ class AgentCNN():
 
 
 
-        self.model=QNetworkCNN(in_channels, width, height, hidden_size, output_size)
+        self.model=QNetworkCNN(in_channels, hidden_size, output_size)
         self.model.to(device)
 
-        self.target_model=QNetworkCNN(in_channels, width, height, hidden_size, output_size)
+        self.target_model=QNetworkCNN(in_channels, hidden_size, output_size)
         self.target_model.to(device)
 
         self.target_model.load_state_dict(self.model.state_dict())

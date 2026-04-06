@@ -1,0 +1,15 @@
+2026-04-05 16:00:26,246 INFO    MainThread:21139 [wandb_setup.py:_flush():81] Current SDK version is 0.25.1
+2026-04-05 16:00:26,246 INFO    MainThread:21139 [wandb_setup.py:_flush():81] Configure stats pid to 21139
+2026-04-05 16:00:26,246 INFO    MainThread:21139 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-04-05 16:00:26,247 INFO    MainThread:21139 [wandb_init.py:setup_run_log_directory():717] Logging user logs to /home/fourat-zai-el-amri/Desktop/python projects/Snake_DQN_Agent/wandb/run-20260405_160026-c0dx2nyl/logs/debug.log
+2026-04-05 16:00:26,247 INFO    MainThread:21139 [wandb_init.py:setup_run_log_directory():718] Logging internal logs to /home/fourat-zai-el-amri/Desktop/python projects/Snake_DQN_Agent/wandb/run-20260405_160026-c0dx2nyl/logs/debug-internal.log
+2026-04-05 16:00:26,248 INFO    MainThread:21139 [wandb_init.py:monkeypatch_ipython():636] configuring jupyter hooks <wandb.sdk.wandb_init._WandbInit object at 0x7067f3391e50>
+2026-04-05 16:00:26,248 INFO    MainThread:21139 [wandb_init.py:init():844] calling init triggers
+2026-04-05 16:00:26,248 INFO    MainThread:21139 [wandb_init.py:init():849] wandb.init called with sweep_config: {}
+config: {'learning_rate': 0.02, 'architecture': 'CNN', 'dataset': 'CIFAR-100', 'epochs': 10, '_wandb': {}}
+2026-04-05 16:00:26,248 INFO    MainThread:21139 [wandb_init.py:init():892] starting backend
+2026-04-05 16:00:26,552 INFO    MainThread:21139 [wandb_init.py:init():895] sending inform_init request
+2026-04-05 16:00:26,563 INFO    MainThread:21139 [wandb_init.py:init():903] backend started and connected
+2026-04-05 16:00:26,597 INFO    MainThread:21139 [wandb_run.py:_label_probe_notebook():1333] probe notebook
+2026-04-05 16:00:26,600 INFO    MainThread:21139 [wandb_init.py:init():973] updated telemetry
+2026-04-05 16:00:26,644 INFO    MainThread:21139 [wandb_init.py:init():997] communicating run to backend with 90.0 second timeout

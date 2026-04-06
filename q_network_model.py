@@ -21,7 +21,7 @@ class QNetworkMLP(nn.Module):
 
 
 class QNetworkCNN(nn.Module):
-    def __init__(self, in_channels, width, height, hidden_size, output_size):
+    def __init__(self, in_channels, hidden_size, output_size):
         super(QNetworkCNN, self).__init__()
         # shape: 4*width*height
 
@@ -30,19 +30,19 @@ class QNetworkCNN(nn.Module):
         self.act1 = nn.ReLU()
 
         self.conv2 = nn.Conv2d(32, 64, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: 64*width*height
+        # shape: batch_size*64*width*height
         self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: 64*width*height
+        # shape: batch_size*64*width*height
         self.act3 = nn.ReLU()
-        self.conv4 = nn.Conv2d(128, 64, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: 64*width*height
+        self.conv4 = nn.Conv2d(128, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # shape: batch_size*128*width*height
         self.act4 = nn.ReLU()
-        self.conv5 = nn.Conv2d(64, 64, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: 64*width*height
+        self.conv5 = nn.Conv2d(128, 128, kernel_size=(3, 3), stride=1, padding=1)
+        # shape: batch_size*64
         self.act5 = nn.ReLU()
 
-        self.fc6 = nn.Linear(64 * width * height, hidden_size)
+        self.fc6 = nn.Linear(128, hidden_size)
         self.act6 = nn.ReLU()
 
         self.fc7 = nn.Linear(hidden_size, output_size)
@@ -61,7 +61,8 @@ class QNetworkCNN(nn.Module):
         x = self.conv5(x)
         x = self.act5(x)
 
-        x = x.flatten(start_dim=1)
+        #instead of x.flatten()
+        x = x.mean(dim=[-2,-1])
 
         x = self.fc6(x)
         x = self.act6(x)

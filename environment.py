@@ -20,13 +20,13 @@ class snake_environment:
         self.death_reason = ""
         if width < 5 or height < 5:
             raise ValueError("minimal board is 5x5")
-        self.d_model = 4
+        self.d_model = 5
         self.width = width
         self.height = height
         self.spawn_snake()
         self.gameover = False
         self.fruit_pos = None
-        self.steps_left = self.width * self.height * 2
+        self.steps_left = self.width * self.height
 
         self.fruit_spawn()
 
@@ -59,9 +59,10 @@ class snake_environment:
     def reset(self):
         self.spawn_snake()
 
-        self.steps_left = self.width * self.height * 2
+        self.steps_left = self.width * self.height 
 
         self.gameover = False
+        self.death_reason = ""
         self.fruit_pos = None
 
         self.fruit_spawn()
@@ -95,13 +96,17 @@ class snake_environment:
         if self.gameover == True:
             encoded_state = F.one_hot(state, num_classes=self.d_model)
         else:
+            body_set = set(self.snake.body)
+            tail = self.snake.body[0]
             for x in range(self.width):
                 for y in range(self.height):
                     if (x, y) == self.fruit_pos:
                         state[x][y] = 2
                     elif (x, y) == self.snake.head:
                         state[x][y] = 1
-                    elif (x, y) in self.snake.body:
+                    elif (x, y) == tail:
+                        state[x][y] = 4
+                    elif (x, y) in body_set: 
                         state[x][y] = 3
             encoded_state = F.one_hot(state, num_classes=self.d_model)
         encoded_state = encoded_state.to(torch.float32)
@@ -115,8 +120,7 @@ class snake_environment:
             return (self.get_state(), reward, self.gameover)
         self.steps_left -= 1
         current_manhaten_distance = abs(self.snake.head[0] - self.fruit_pos[0]) + abs(
-            self.snake.head[1] - self.fruit_pos[1]
-        )
+            self.snake.head[1] - self.fruit_pos[1])
 
         current_direction = self.snake.direction
         #  0_straight // 1_right // 2_left
@@ -136,8 +140,7 @@ class snake_environment:
         new_head = (new_x, new_y)
 
         new_manhaten_distance = abs(new_head[0] - self.fruit_pos[0]) + abs(
-            new_head[1] - self.fruit_pos[1]
-        )
+            new_head[1] - self.fruit_pos[1])
         if current_manhaten_distance < new_manhaten_distance:
             reward -= 0.01
         else:
@@ -146,7 +149,7 @@ class snake_environment:
         if (
             not (-1 < new_head[0] < self.width)
             or not (-1 < new_head[1] < self.height)
-            or new_head in self.snake.body
+            or new_head in set(self.snake.body[1:])
         ):
             self.gameover = True
             if new_head in self.snake.body:
@@ -158,6 +161,7 @@ class snake_environment:
             reward += -1.0
             return (self.get_state(), reward, self.gameover)
         elif self.steps_left <= 0:
+            self.death_reason = "steps"
             self.gameover = True
             reward += -1.0
             return (self.get_state(), reward, self.gameover)
@@ -167,7 +171,7 @@ class snake_environment:
             self.snake.score += 100
             return (self.get_state(), reward, self.gameover)
         elif new_head == self.fruit_pos:
-            self.steps_left = self.width * self.height * 2
+            self.steps_left += self.width * self.height
             self.snake.body.append(new_head)
             self.snake.head = new_head
             self.fruit_spawn()
