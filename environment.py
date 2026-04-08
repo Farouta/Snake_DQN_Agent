@@ -32,9 +32,11 @@ class snake_environment:
 
     def spawn_snake(self):
         self.snake = snake()
+        
         x = random.randrange(1, self.width - 2)
         y = random.randrange(1, self.height - 2)
         for i in range(self.snake.length):
+            self.snake.score += 1
             if len(self.snake.body) == 0:
                 self.snake.body.append((x, y))
             r = random.randint(0, 3)
@@ -83,13 +85,17 @@ class snake_environment:
         print("=" * (self.width * 2 - 1))
 
     def fruit_spawn(self):
-        # Note: For a very large snake filling the board
+        # Avoid infinite loops when the snake fills the board.
+        if len(self.snake.body) >= self.width * self.height:
+            self.fruit_pos = None
+            return False
+
         while True:
             x = random.randint(0, self.width - 1)
             y = random.randint(0, self.height - 1)
             if (x, y) not in self.snake.body:
                 self.fruit_pos = (x, y)
-                break
+                return True
 
     def get_state(self):
         state = torch.zeros((self.width, self.height), dtype=torch.int64, device=device)
@@ -167,15 +173,22 @@ class snake_environment:
             return (self.get_state(), reward, self.gameover)
         elif self.width * self.height < len(self.snake.body) + 1:
             self.gameover = True
-            reward += 10.0
+            reward += 2.0
             self.snake.score += 100
             return (self.get_state(), reward, self.gameover)
         elif new_head == self.fruit_pos:
             self.steps_left += self.width * self.height
             self.snake.body.append(new_head)
             self.snake.head = new_head
+            if len(self.snake.body) >= self.width * self.height:
+                self.gameover = True
+                reward += 10.0
+                self.snake.score += 100
+                self.death_reason = "filled"
+                return (self.get_state(), reward, self.gameover)
+
             self.fruit_spawn()
-            reward += 2.0
+            reward += 1.0
             self.snake.score += 1
             return (self.get_state(), reward, self.gameover)
 
