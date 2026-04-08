@@ -129,8 +129,8 @@ class AgentCNN():
             return random.randint(0,2)
         else:
             with torch.no_grad():
-                q_values=self.model(state)
-                action=torch.argmax(q_values).item()
+                q_values_prob=self.model(state)
+                action=torch.argmax(q_values_prob).item()
         return action
         
     def update_target_model(self):

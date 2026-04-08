@@ -11,7 +11,7 @@ class snake:
         self.length = 1
         self.head = None
         self.body = []
-        self.score = 0
+        self.score = 1
         self.direction = (0, 1)
 
 
@@ -171,19 +171,14 @@ class snake_environment:
             self.gameover = True
             reward += -1.0
             return (self.get_state(), reward, self.gameover)
-        elif self.width * self.height < len(self.snake.body) + 1:
-            self.gameover = True
-            reward += 2.0
-            self.snake.score += 100
-            return (self.get_state(), reward, self.gameover)
         elif new_head == self.fruit_pos:
             self.steps_left += self.width * self.height
             self.snake.body.append(new_head)
             self.snake.head = new_head
             if len(self.snake.body) >= self.width * self.height:
                 self.gameover = True
-                reward += 10.0
-                self.snake.score += 100
+                reward += 2.0
+                self.snake.score += 1
                 self.death_reason = "filled"
                 return (self.get_state(), reward, self.gameover)
 
