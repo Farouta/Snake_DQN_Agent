@@ -5,3 +5,4 @@ __pycache__/
 generate_gif.py
 .env
 wandb/
+outputs/

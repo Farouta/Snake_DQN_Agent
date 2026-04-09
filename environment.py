@@ -167,7 +167,7 @@ class snake_environment:
             reward += -1.0
             return (self.get_state(), reward, self.gameover)
         elif self.steps_left <= 0:
-            self.death_reason = "steps"
+            self.death_reason = "timeout"
             self.gameover = True
             reward += -1.0
             return (self.get_state(), reward, self.gameover)
@@ -179,7 +179,7 @@ class snake_environment:
                 self.gameover = True
                 reward += 2.0
                 self.snake.score += 1
-                self.death_reason = "filled"
+                self.death_reason = "won"
                 return (self.get_state(), reward, self.gameover)
 
             self.fruit_spawn()
