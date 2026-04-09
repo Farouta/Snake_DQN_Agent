@@ -9,8 +9,9 @@ benchmark:
   num_games: 300
   logging_batch: 50
   wandb_project: "Snake-DQN"
+
 agent:
-  name: "cnn agent 5 layers using mean in the last output layer"
+  name: "cnn_5layer_mean"
   hidden_size: 556
   memory_length: 10000
   gamma: 0.99
@@ -23,6 +24,9 @@ train:
   update_target_every: 512
   num_episodes: 20000
   logging_batch: 500
-  batch_size: 556
-  
-  
+  batch_size: 256
+
+
+hydra:
+  run:
+    dir: .

@@ -1,0 +1,8 @@
+torch>=2.0
+wandb
+hydra-core
+omegaconf
+tqdm
+Pillow
+matplotlib
+numpy

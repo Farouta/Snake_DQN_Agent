@@ -28,7 +28,7 @@ class AgentCNN():
 
         self.target_model.load_state_dict(self.model.state_dict())
 
-        self.loss_function = nn.MSELoss()
+        self.loss_function = nn.SmoothL1Loss()  # Huber loss: robust to reward outliers
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
 
 
@@ -87,6 +87,7 @@ class AgentCNN():
             loss=self.loss_function(prediction,target)
             self.optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
 
             self.epsilon=max(self.epsilon_min,self.epsilon*self.epsilon_decay)

@@ -14,13 +14,13 @@ class QNetworkCNN(nn.Module):
         # shape: batch_size*64*width*height
         self.act2 = nn.ReLU()
         self.conv3 = nn.Conv2d(64, 128, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: batch_size*64*width*height
+        # shape: batch_size*128*width*height
         self.act3 = nn.ReLU()
         self.conv4 = nn.Conv2d(128, 128, kernel_size=(3, 3), stride=1, padding=1)
         # shape: batch_size*128*width*height
         self.act4 = nn.ReLU()
         self.conv5 = nn.Conv2d(128, 128, kernel_size=(3, 3), stride=1, padding=1)
-        # shape: batch_size*64
+        # shape: batch_size*128*width*height
         self.act5 = nn.ReLU()
 
         self.fc6 = nn.Linear(128, hidden_size)

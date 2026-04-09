@@ -2,21 +2,86 @@ import os
 import torch
 import wandb
 import hydra
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
 
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 from hydra.utils import to_absolute_path
 
 from agent import AgentCNN
 from environment import snake_environment
 
-def evaluate_agent(agent, env, test_name, num_games=100, logging_batch=50):
 
+def create_eval_dashboard(history, test_name, logging_batch):
+    """
+    Generate a 3-panel matplotlib dashboard for evaluation:
+      1. Average Score per Batch (blue line)
+      2. Death Reason Ratio per Batch (stacked bar chart)
+      3. Average Game Length per Batch (green line)
+    """
+    batches = np.arange(1, len(history["scores"]) + 1)
+
+    fig, axes = plt.subplots(3, 1, figsize=(10, 12), dpi=100)
+    fig.suptitle(f"Evaluation Dashboard — {test_name} ({logging_batch} games/batch)",
+                 fontsize=14, fontweight='bold', y=0.98)
+
+    # --- Panel 1: Average Score ---
+    ax = axes[0]
+    ax.plot(batches, history["scores"], 'o-', color='blue', markersize=3, label="Score Mean")
+    ax.set_title("Average Score per Batch", fontweight='bold')
+    ax.set_xlabel(f"Batch of {logging_batch} Games")
+    ax.set_ylabel("Average Score")
+    ax.legend(loc='upper left')
+    ax.grid(True, alpha=0.3)
+
+    # --- Panel 2: Death Reason Ratio (STACKED BAR CHART) ---
+    ax = axes[1]
+    wall = np.array(history["death_wall"])
+    body = np.array(history["death_body"])
+    timeout = np.array(history["death_timeout"])
+    won = np.array(history["death_won"])
+
+    ax.bar(batches, won, color='#2ca02c', label='Solved')
+    ax.bar(batches, timeout, bottom=won, color='#9467bd', label='Ran out of Steps')
+    ax.bar(batches, wall, bottom=won + timeout, color='#bcbd22', label='Ran into Wall')
+    ax.bar(batches, body, bottom=won + timeout + wall, color='#ff7f0e', label='Ran into Body')
+
+    ax.set_title("Death Reason Ratio per Batch", fontweight='bold')
+    ax.set_xlabel(f"Batch of {logging_batch} Games")
+    ax.set_ylabel("Ratio")
+    ax.set_ylim(0, 1.05)
+    ax.legend(loc='upper right', fontsize=8)
+    ax.grid(True, alpha=0.3, axis='y')
+
+    # --- Panel 3: Average Game Length ---
+    ax = axes[2]
+    ax.plot(batches, history["lengths"], 'o-', color='green', markersize=3, label="Length Mean (Steps)")
+    ax.set_title("Average Game Length per Batch", fontweight='bold')
+    ax.set_xlabel(f"Batch of {logging_batch} Games")
+    ax.set_ylabel("Average Steps per Game")
+    ax.legend(loc='upper left')
+    ax.grid(True, alpha=0.3)
+
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    return fig
+
+
+def evaluate_agent(agent, env, test_name, num_games=100, logging_batch=50):
     """Plays N games and returns the average score and win rate."""
     deaths = {"wall": 0, "body": 0, "timeout": 0, "won": 0}
     scores = []
     batch_deaths = {"wall": 0, "body": 0, "timeout": 0, "won": 0}
     batch_scores = []
     batch_lengths = []
+
+    # Dashboard history
+    history = {
+        "scores": [], "lengths": [],
+        "death_wall": [], "death_body": [],
+        "death_timeout": [], "death_won": [],
+    }
 
     agent.epsilon = 0.0
     agent.model.eval()
@@ -52,30 +117,36 @@ def evaluate_agent(agent, env, test_name, num_games=100, logging_batch=50):
                     "timeout": batch_deaths["timeout"] / batch_total if batch_total else 0.0,
                     "won": batch_deaths["won"] / batch_total if batch_total else 0.0,
                 }
-                batch_table = wandb.Table(
-                    data=[[k, v] for k, v in batch_rates.items()],
-                    columns=["end_state", "rate"],
-                )
-                batch_bar = wandb.plot.bar(
-                    batch_table,
-                    "end_state",
-                    "rate",
-                    title=f"{test_name} End State Rates (last {batch_total})",
-                )
                 batch_mean_score = sum(batch_scores) / batch_total if batch_total else 0.0
                 batch_mean_length = sum(batch_lengths) / batch_total if batch_total else 0.0
                 batch_win_rate = batch_rates["won"] * 100.0
 
+                # Accumulate history
+                history["scores"].append(batch_mean_score)
+                history["lengths"].append(batch_mean_length)
+                history["death_wall"].append(batch_rates["wall"])
+                history["death_body"].append(batch_rates["body"])
+                history["death_timeout"].append(batch_rates["timeout"])
+                history["death_won"].append(batch_rates["won"])
+
+                # Generate dashboard
+                fig = create_eval_dashboard(history, test_name, logging_batch)
+
                 wandb.log(
                     {
-                        f"{test_name}/End_State_Rates": batch_bar,
                         f"{test_name}/mean_score": batch_mean_score,
                         f"{test_name}/mean_length": batch_mean_length,
                         f"{test_name}/win_rate": batch_win_rate,
+                        f"{test_name}/Death_Rate/Wall": batch_rates["wall"],
+                        f"{test_name}/Death_Rate/Body": batch_rates["body"],
+                        f"{test_name}/Death_Rate/Timeout": batch_rates["timeout"],
+                        f"{test_name}/Death_Rate/Won": batch_rates["won"],
+                        f"{test_name}/Dashboard": wandb.Image(fig),
                         f"{test_name}/games": game_idx,
                     },
                     step=batch_idx,
                 )
+                plt.close(fig)
 
                 batch_deaths = {"wall": 0, "body": 0, "timeout": 0, "won": 0}
                 batch_scores = []
@@ -95,7 +166,13 @@ def evaluate_agent(agent, env, test_name, num_games=100, logging_batch=50):
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
 
-    wandb.init(project=cfg.benchmark.wandb_project, job_type="evaluation", name=f"Eval_{cfg.game.base_board_size}x{cfg.game.base_board_size}")
+    run_name = f"Eval_{cfg.game.base_board_size}x{cfg.game.base_board_size}"
+    wandb.init(
+        project=cfg.benchmark.wandb_project,
+        job_type="evaluation",
+        name=run_name,
+        config=OmegaConf.to_container(cfg, resolve=True),
+    )
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -110,7 +187,6 @@ def main(cfg: DictConfig):
         test_suites["Expansion 7x7"] = {"width": 7, "height": 7}
         test_suites["Marathon 10x10"] = {"width": 10, "height": 10}
     
-
     model_path = os.path.join(to_absolute_path(cfg.paths.model_path), "best_model.pth")
 
     for test_name, config in test_suites.items():
