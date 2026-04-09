@@ -1,23 +1,4 @@
 import torch.nn as nn
-import torch
-
-
-class QNetworkMLP(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(QNetworkMLP, self).__init__()
-        self.layer1 = nn.Linear(input_size, hidden_size)
-        self.act1 = nn.ReLU()
-        self.layer2 = nn.Linear(hidden_size, hidden_size)
-        self.act2 = nn.ReLU()
-        self.layer3 = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = self.layer1(x)
-        x = self.act1(x)
-        x = self.layer2(x)
-        x = self.act2(x)
-        q_values = self.layer3(x)
-        return q_values
 
 
 class QNetworkCNN(nn.Module):
@@ -61,7 +42,7 @@ class QNetworkCNN(nn.Module):
         x = self.conv5(x)
         x = self.act5(x)
 
-        #instead of x.flatten()
+        #x= x.flatten(start_dim=1)
         x = x.mean(dim=[-2,-1])
 
         x = self.fc6(x)
